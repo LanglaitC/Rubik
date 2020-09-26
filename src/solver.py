@@ -87,8 +87,7 @@ class Solver():
         print("It took {} seconds".format(time.time() - startTime))
         print("------------------------------------------------------------------------------")
 
-    def executeMovesForConfig(self, current_phase, current_cubik, queue_set, state_goal):
-        next_queue = []
+    def executeMovesForConfig(self, current_phase, current_cubik, queue_set, next_queue, state_goal):
         for moveIdx in self._PHASES[current_phase]:
             next_cubik = Cubik(current_cubik.state[:], current_cubik.parents[:])
             command = self._ALL_STATE_MOVES_VARIATION[moveIdx]
@@ -121,15 +120,10 @@ class Solver():
                 queue_set = set([queue[0].canGoToNextPhase(current_phase)])
             else:
                 next_queue = []
-                with ThreadPoolExecutor(max_workers=11) as executor:
-                    futureResults = {executor.submit(self.executeMovesForConfig,current_phase, current_cubik, queue_set, state_goal): current_cubik for current_cubik in queue}
-                    for result in futureResults:
-                        tmp = result.result()
-                        if (tmp[0]):
-                            next_queue = tmp[1]
-                            break
-                        goToNextPhase |= tmp[0]
-                        next_queue += tmp[1]
+                for current_cubik in queue:
+                    goToNextPhase, next_queue = self.executeMovesForConfig(current_phase, current_cubik, queue_set, next_queue, state_goal)
+                    if goToNextPhase:
+                        break
                 queue = next_queue
         if (self.verbose):
             self.displayAdditionnalInformation(len(queue_set), startTime, current_phase, queue[0])
