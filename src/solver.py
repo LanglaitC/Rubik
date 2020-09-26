@@ -1,4 +1,5 @@
 from src.cubik import Cubik
+import time
 
 class Solver():
     _COMMAND_IS_NOT_VALID_MESSAGE = 'Invalid command : {}'
@@ -53,11 +54,11 @@ class Solver():
     _states = []
     _initial_commands = []
 
-    def __init__(self, cubik, commands):
+    def __init__(self, cubik, commands, verbose=False):
         self.cubik = cubik
+        self.verbose = verbose
         self.parseCommands(commands)
         self.executeInitialCommands()
-        self.solve()
 
     def addInitialComand(self, operator: str, direction, time_to_execute: int):
         self._initial_commands.append((operator, direction, time_to_execute))
@@ -79,19 +80,27 @@ class Solver():
                     time_to_execute += 1
             self.addInitialComand(raw_command[0], direction, time_to_execute)
 
+    def displayAdditionnalInformation(self, number_of_states, startTime, current_phase, cubik):
+        print("Solved phase {} with {} moves: {}".format(current_phase, len(cubik.parents), cubik.parent_moves_string()))
+        print("{} configuration where saved at the same time to resolve this phase".format(number_of_states))
+        print("It took {} seconds".format(time.time() - startTime))
+        print("------------------------------------------------------------------------------")
+
     def solve(self):
         current_phase = 0
         goal = Cubik(list(range(20)) + 20 * [0])
         queue = [self.cubik]
         queue_set = set([queue[0].canGoToNextPhase(current_phase)])
+        startTime = time.time()
         while current_phase != self._GOAL_PHASE:
             goToNextPhase = False
             state_goal = goal.canGoToNextPhase(current_phase)
             if queue[0].canGoToNextPhase(current_phase) == state_goal:
-                queue_set = set([queue[0].canGoToNextPhase(current_phase)])
-                print(queue[0].state)
                 current_phase += 1
-                print("Solved phase {} with moves {}".format(current_phase, queue[0].parent_moves_string()))
+                if (self.verbose):
+                    self.displayAdditionnalInformation(len(queue_set), startTime, current_phase, queue[0])
+                startTime = time.time()
+                queue_set = set([queue[0].canGoToNextPhase(current_phase)])
             else:
                 next_queue = []
                 for current_cubik in queue:
@@ -101,11 +110,6 @@ class Solver():
                         next_cubik.rotateState(command[0], command[1], command[2])
                         next_cubik.parents.append(moveIdx)
                         next_id = next_cubik.canGoToNextPhase(current_phase)
-                        if (current_phase and next_cubik.canGoToNextPhase(current_phase - 1) != goal.canGoToNextPhase(current_phase -1)):
-                            print(current_phase - 1 ,command)
-                            print("!!!!!!!!!!!!!!!!!")
-                            while(True):
-                                pass
                         if (next_id == state_goal):
                             queue_set.add(next_id)
                             goToNextPhase = True
@@ -117,6 +121,6 @@ class Solver():
                     if goToNextPhase:
                         break
                 queue = next_queue
-                print(len(queue))
-
-        return
+        if (self.verbose):
+            self.displayAdditionnalInformation(len(queue_set), startTime, current_phase, queue[0])
+        return queue[0].parent_moves_string()

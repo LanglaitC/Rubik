@@ -205,7 +205,7 @@ class Cubik():
                     result[2] ^= int(self.state[i] > self.state[j])
             return tuple(result)
         else:
-            return tuple(self._goal)
+            return tuple(self.state)
 
     def rotateState(self, command, direction, time_to_execute):
         direction = 1 if direction == self._CLOCKWISE_AXE else -1
@@ -216,7 +216,7 @@ class Cubik():
             corners = cubies[1]
             for edgeIdx, edge in enumerate(edges):
                 newValue = old_state[edges[(edgeIdx + direction) % len(edges)]]
-                newOrientation = self.getEdgeOrientation(command, old_state[edge + 20])
+                newOrientation = self.getEdgeOrientation(command, old_state[edges[(edgeIdx + direction) % len(edges)] + 20])
                 self.state[edge] = newValue
                 self.state[edge + 20] = newOrientation
             for cornerIdx, corner in enumerate(corners):
