@@ -19,13 +19,34 @@ class Cubik():
     _UPPER_FACE_INDEX = 4
     _BOTTOM_FACE_INDEX = 5
 
+    MOVES_STRING = [
+        "U",
+        "U'",
+        "U2",
+        "D",
+        "D'",
+        "D2",
+        "F",
+        "F'",
+        "F2",
+        "B",
+        "B'",
+        "B2",
+        "L",
+        "L'",
+        "L2",
+        "R",
+        "R'",
+        "R2",
+    ]
+
     _STATE_MOVES = {
         _ROTATE_FRONT:  ((0, 9, 4, 8), (0, 3, 5, 4)), # Moves are : 4 rotating edges, 4 rotating corners
         _ROTATE_RIGHT: ((1 , 8, 5, 10), (1, 0, 4, 7)),
         _ROTATE_BACK: ((2, 10, 6, 11), (2, 1, 7, 6)),
         _ROTATE_LEFT: ((3, 11, 7 , 9), (3, 2, 6 , 5)),
         _ROTATE_UP: ((0, 1, 2, 3), (0, 1, 2, 3)),
-        _ROTATE_DOWN: ((4, 5, 6, 7), (4, 5, 6, 7))
+        _ROTATE_DOWN: ((4, 7, 6, 5), (4, 5, 6, 7))
     }
 
     _VALID_COMMANDS = {
@@ -167,12 +188,12 @@ class Cubik():
 
     def canGoToNextPhase(self, currentPhase):
         if currentPhase == 0:
-            return self.state[20:32] == list(12 * [0])
+            return tuple(self.state[20:32])
         if currentPhase == 1:
-            result = self.state[32:40]
+            result = self.state[31:40]
             for e in range(12):
                 result[0] |= (math.floor(self.state[e] / 8)) << e
-            return self.state[32:40] == list(8 * [0])
+            return tuple(result)
         if currentPhase == 2:
             result = [0,0,0]
             for e in range(12):
@@ -182,9 +203,9 @@ class Cubik():
             for i in range(12, 20):
                 for j in range(i+1, 20):
                     result[2] ^= int(self.state[i] > self.state[j])
-            return result == [0,0 ,0]
+            return tuple(result)
         else:
-            return self.state == self._goal
+            return tuple(self._goal)
 
     def rotateState(self, command, direction, time_to_execute):
         direction = 1 if direction == self._CLOCKWISE_AXE else -1
@@ -220,6 +241,9 @@ class Cubik():
                 tmp = self.getRow(neighbours[faceRotationIdx + 1], facesRotation[faceRotationIdx + 1])
                 self.replaceRow(tmp, faceIdx, facesRotation[faceRotationIdx])
             self.replaceRow(firstRow, neighbours[len(neighbours) - 1], facesRotation[len(neighbours) - 1])
+    
+    def parent_moves_string(self):
+        return " ".join([self.MOVES_STRING[move] for move in self.parents])
         
     def debug(self):
         for faceIdx in range(len(self._COLORS)):

@@ -16,32 +16,32 @@ class Solver():
     _VALID_COMMANDS = ('F', 'R', 'U', 'B', 'L', 'D')
     _CUBE_DIMENSION = 3
     _ALL_STATE_MOVES_VARIATION = (
-        (_ROTATE_FRONT, _CLOCKWISE_AXE, 1),         #F
-        (_ROTATE_FRONT, _COUNTER_CLOCKWISE_AXE, 1), #F'
-        (_ROTATE_FRONT, _CLOCKWISE_AXE, 2),         #F2
-        (_ROTATE_RIGHT, _CLOCKWISE_AXE, 1),         #R
-        (_ROTATE_RIGHT, _COUNTER_CLOCKWISE_AXE, 1), #R'
-        (_ROTATE_RIGHT, _CLOCKWISE_AXE, 2),         #R2
-        (_ROTATE_BACK, _CLOCKWISE_AXE, 1),          #B
-        (_ROTATE_BACK, _COUNTER_CLOCKWISE_AXE, 1),  #B'
-        (_ROTATE_BACK, _CLOCKWISE_AXE, 2),          #B2
-        (_ROTATE_LEFT, _CLOCKWISE_AXE, 1),          #L
-        (_ROTATE_LEFT, _COUNTER_CLOCKWISE_AXE, 1),  #L'
-        (_ROTATE_LEFT, _CLOCKWISE_AXE, 2),          #L2   
         (_ROTATE_UP, _CLOCKWISE_AXE, 1),            #U
         (_ROTATE_UP, _COUNTER_CLOCKWISE_AXE, 1),    #U'
         (_ROTATE_UP, _CLOCKWISE_AXE, 2),            #U2
         (_ROTATE_DOWN, _CLOCKWISE_AXE, 1),          #D
         (_ROTATE_DOWN, _COUNTER_CLOCKWISE_AXE, 1),  #D'
         (_ROTATE_DOWN, _CLOCKWISE_AXE, 2),          #D2
+        (_ROTATE_FRONT, _CLOCKWISE_AXE, 1),         #F
+        (_ROTATE_FRONT, _COUNTER_CLOCKWISE_AXE, 1), #F'
+        (_ROTATE_FRONT, _CLOCKWISE_AXE, 2),         #F2
+        (_ROTATE_BACK, _CLOCKWISE_AXE, 1),          #B
+        (_ROTATE_BACK, _COUNTER_CLOCKWISE_AXE, 1),  #B'
+        (_ROTATE_BACK, _CLOCKWISE_AXE, 2),          #B2
+        (_ROTATE_LEFT, _CLOCKWISE_AXE, 1),          #L
+        (_ROTATE_LEFT, _COUNTER_CLOCKWISE_AXE, 1),  #L'
+        (_ROTATE_LEFT, _CLOCKWISE_AXE, 2),          #L2   
+        (_ROTATE_RIGHT, _CLOCKWISE_AXE, 1),         #R
+        (_ROTATE_RIGHT, _COUNTER_CLOCKWISE_AXE, 1), #R'
+        (_ROTATE_RIGHT, _CLOCKWISE_AXE, 2),         #R2
     )
 
 
     _PHASES = (
-        tuple(range(len(_ALL_STATE_MOVES_VARIATION))),
-        (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 17),
-        (2, 3, 4, 5, 8, 9, 10, 11, 14, 17),
-        (2, 5, 8, 11, 14, 17)
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+            [0, 1, 2, 3, 4, 5, 8, 11, 12, 13, 14, 15, 16, 17],
+            [0, 1, 2, 3, 4, 5, 8, 11, 14, 17],
+            [2, 5, 8, 11, 14, 17]
     )
     
     _VALID_APPENDIXES = [
@@ -81,14 +81,17 @@ class Solver():
 
     def solve(self):
         current_phase = 0
+        goal = Cubik(list(range(20)) + 20 * [0])
         queue = [self.cubik]
-        queue_set = set(tuple(queue[0].state))
+        queue_set = set([queue[0].canGoToNextPhase(current_phase)])
         while current_phase != self._GOAL_PHASE:
             goToNextPhase = False
-            complexity = 0
-            if queue[0].canGoToNextPhase(current_phase):
-                print("nextPhase!")
+            state_goal = goal.canGoToNextPhase(current_phase)
+            if queue[0].canGoToNextPhase(current_phase) == state_goal:
+                queue_set = set([queue[0].canGoToNextPhase(current_phase)])
+                print(queue[0].state)
                 current_phase += 1
+                print("Solved phase {} with moves {}".format(current_phase, queue[0].parent_moves_string()))
             else:
                 next_queue = []
                 for current_cubik in queue:
@@ -97,17 +100,23 @@ class Solver():
                         command = self._ALL_STATE_MOVES_VARIATION[moveIdx]
                         next_cubik.rotateState(command[0], command[1], command[2])
                         next_cubik.parents.append(moveIdx)
-                        if (next_cubik.canGoToNextPhase(current_phase)):
-                            queue_set.add(tuple(next_cubik.state))
+                        next_id = next_cubik.canGoToNextPhase(current_phase)
+                        if (current_phase and next_cubik.canGoToNextPhase(current_phase - 1) != goal.canGoToNextPhase(current_phase -1)):
+                            print(current_phase - 1 ,command)
+                            print("!!!!!!!!!!!!!!!!!")
+                            while(True):
+                                pass
+                        if (next_id == state_goal):
+                            queue_set.add(next_id)
                             goToNextPhase = True
                             next_queue = [next_cubik]
                             break
-                        elif tuple(next_cubik.state) not in queue_set:
-                            queue_set.add(tuple(next_cubik.state))
+                        elif next_id not in queue_set:
+                            queue_set.add(next_id)
                             next_queue.append(next_cubik)
                     if goToNextPhase:
                         break
-                print(len(next_queue))
                 queue = next_queue
+                print(len(queue))
 
         return

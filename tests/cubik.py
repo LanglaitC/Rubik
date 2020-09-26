@@ -79,6 +79,21 @@ class TestStringMethods(unittest.TestCase):
         cubik.rotateState('U', cubik._COUNTER_CLOCKWISE_AXE, 1)
         self.assertEqual(cubik.state, [3, 0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 15, 12, 13, 14, 16, 17, 18, 19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
+    def test_D(self):
+        cubik = Cubik(goal_state[:])
+        cubik.rotateState('D', cubik._CLOCKWISE_AXE, 1)
+        self.assertEqual(cubik.state, [0, 1, 2, 3, 7, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+
+    def test_D2(self):
+        cubik = Cubik(goal_state[:])
+        cubik.rotateState('D', cubik._CLOCKWISE_AXE, 2)
+        self.assertEqual(cubik.state, [0, 1, 2, 3, 6, 7, 4, 5, 8, 9, 10, 11, 12, 13, 14, 15, 18, 19, 16, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    
+    def test_DPRIME(self):
+        cubik = Cubik(goal_state[:])
+        cubik.rotateState('D', cubik._COUNTER_CLOCKWISE_AXE, 1)
+        self.assertEqual(cubik.state, [0, 1, 2, 3, 5, 6, 7, 4, 8, 9, 10, 11, 12, 13, 14, 15, 19, 16, 17, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+
     
 
     
