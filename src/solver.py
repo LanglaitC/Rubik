@@ -1,5 +1,6 @@
 from src.cubik import Cubik
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 class Solver():
     _COMMAND_IS_NOT_VALID_MESSAGE = 'Invalid command : {}'
@@ -86,6 +87,23 @@ class Solver():
         print("It took {} seconds".format(time.time() - startTime))
         print("------------------------------------------------------------------------------")
 
+    def executeMovesForConfig(self, current_phase, current_cubik, queue_set, state_goal):
+        next_queue = []
+        for moveIdx in self._PHASES[current_phase]:
+            next_cubik = Cubik(current_cubik.state[:], current_cubik.parents[:])
+            command = self._ALL_STATE_MOVES_VARIATION[moveIdx]
+            next_cubik.rotateState(command[0], command[1], command[2])
+            next_cubik.parents.append(moveIdx)
+            next_id = next_cubik.canGoToNextPhase(current_phase)
+            if (next_id == state_goal):
+                queue_set.add(next_id)
+                next_queue = [next_cubik]
+                return True, next_queue
+            elif next_id not in queue_set:
+                queue_set.add(next_id)
+                next_queue.append(next_cubik)
+        return False, next_queue
+
     def solve(self):
         current_phase = 0
         goal = Cubik(list(range(20)) + 20 * [0])
@@ -103,23 +121,15 @@ class Solver():
                 queue_set = set([queue[0].canGoToNextPhase(current_phase)])
             else:
                 next_queue = []
-                for current_cubik in queue:
-                    for moveIdx in self._PHASES[current_phase]:
-                        next_cubik = Cubik(current_cubik.state[:], current_cubik.parents[:])
-                        command = self._ALL_STATE_MOVES_VARIATION[moveIdx]
-                        next_cubik.rotateState(command[0], command[1], command[2])
-                        next_cubik.parents.append(moveIdx)
-                        next_id = next_cubik.canGoToNextPhase(current_phase)
-                        if (next_id == state_goal):
-                            queue_set.add(next_id)
-                            goToNextPhase = True
-                            next_queue = [next_cubik]
+                with ThreadPoolExecutor(max_workers=11) as executor:
+                    futureResults = {executor.submit(self.executeMovesForConfig,current_phase, current_cubik, queue_set, state_goal): current_cubik for current_cubik in queue}
+                    for result in futureResults:
+                        tmp = result.result()
+                        if (tmp[0]):
+                            next_queue = tmp[1]
                             break
-                        elif next_id not in queue_set:
-                            queue_set.add(next_id)
-                            next_queue.append(next_cubik)
-                    if goToNextPhase:
-                        break
+                        goToNextPhase |= tmp[0]
+                        next_queue += tmp[1]
                 queue = next_queue
         if (self.verbose):
             self.displayAdditionnalInformation(len(queue_set), startTime, current_phase, queue[0])
