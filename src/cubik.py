@@ -21,23 +21,23 @@ class Cubik():
 
     MOVES_STRING = [
         "U",
-        "U'",
         "U2",
+        "U'",
         "D",
-        "D'",
         "D2",
+        "D'",
         "F",
-        "F'",
         "F2",
+        "F'",
         "B",
-        "B'",
         "B2",
+        "B'",
         "L",
-        "L'",
         "L2",
+        "L'",
         "R",
-        "R'",
         "R2",
+        "R'",
     ]
 
     _STATE_MOVES = {
@@ -244,12 +244,31 @@ class Cubik():
     
     def parent_moves_string(self):
         return " ".join([self.MOVES_STRING[move] for move in self.parents])
+
+    def print_single_face(self, faces, display_all_three=False):
+        for row in range(3):
+            for faceIdx, face in enumerate(faces):
+                for col in range(3):
+                    if (display_all_three or faceIdx == 1):
+                        colorIdx = self._COLORS.index(face[row][col])
+                        print(self._ANSI_COLORS[colorIdx] + 'O', end='\033[0m ')
+                    else:
+                        print(" ", end=" ")
+            print("")
         
     def debug(self):
-        for faceIdx in range(len(self._COLORS)):
-            for row in range(self._CUBE_DIMENSION):
-                for col in range(self._CUBE_DIMENSION):
-                    colorIdx = self._COLORS.index(self._faces[faceIdx][row][col])
-                    print(self._ANSI_COLORS[colorIdx] + 'O', end='\033[0m ')
-                print('\n', end='')
-            print('\n', end='')
+        empty_face = [[' ' for x in range(3)] for y in range(3)]
+        self.print_single_face([empty_face, self._faces[self._LEFT_FACE_INDEX], empty_face])
+        self.print_single_face([self._faces[self._FRONT_FACE_INDEX], self._faces[self._UPPER_FACE_INDEX], self._faces[self._BACK_FACE_INDEX]], True)
+        self.print_single_face([empty_face, self._faces[self._RIGHT_FACE_INDEX], empty_face])
+        self.print_single_face([empty_face, self._faces[self._BOTTOM_FACE_INDEX], empty_face])
+
+
+
+        # for faceIdx in range(len(self._COLORS)):
+        #     for row in range(self._CUBE_DIMENSION):
+        #         for col in range(self._CUBE_DIMENSION):
+        #             colorIdx = self._COLORS.index(self._faces[faceIdx][row][col])
+        #             print(self._ANSI_COLORS[colorIdx] + 'O', end='\033[0m ')
+        #         print('\n', end='')
+        #     print('\n', end='')

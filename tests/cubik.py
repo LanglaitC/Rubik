@@ -3,7 +3,7 @@ from src.cubik import Cubik
 
 goal_state = [x for x in range(20)] + 20 * [0]
 
-class TestStringMethods(unittest.TestCase):
+class CubikMovesMethods(unittest.TestCase):
     def test_F(self):
         cubik = Cubik(goal_state[:])
         cubik.rotateState('F', cubik._CLOCKWISE_AXE, 1)
