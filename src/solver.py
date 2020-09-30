@@ -38,6 +38,26 @@ class Solver():
         (_ROTATE_RIGHT, _COUNTER_CLOCKWISE_AXE, 1), #R'
     )
 
+    _MOVES_STRING = [
+        "U",
+        "U2",
+        "U'",
+        "D",
+        "D2",
+        "D'",
+        "F",
+        "F2",
+        "F'",
+        "B",
+        "B2",
+        "B'",
+        "L",
+        "L2",
+        "L'",
+        "R",
+        "R2",
+        "R'",
+    ]
 
     _PHASES = (
             [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
@@ -59,7 +79,6 @@ class Solver():
         self.cubik = cubik
         self.verbose = verbose
         self._initial_commands = self.parseCommands(commands)
-        print([self._ALL_STATE_MOVES_VARIATION.index(move) for move in self._initial_commands])
         self.executeInitialCommands()
 
     def executeInitialCommands(self):
@@ -81,13 +100,16 @@ class Solver():
             commands.append((raw_command[0], direction, time_to_execute))
         return commands
 
-    def displayAdditionnalInformation(self, number_of_states, startTime, current_phase, cubik):
+    def rebuild_moves_string(self, moves):
+        return " ".join([self._MOVES_STRING[move] for move in moves])
+
+    def old_displayAdditionnalInformation(self, number_of_states, startTime, current_phase, cubik):
         print("Solved phase {} with {} moves: {}".format(current_phase, len(cubik.parents), cubik.parent_moves_string()))
         print("{} configuration where saved at the same time to resolve this phase".format(number_of_states))
         print("It took {} seconds".format(time.time() - startTime))
         print("------------------------------------------------------------------------------")
 
-    def executeMovesForConfig(self, current_phase, current_cubik, queue_set, next_queue, state_goal, recursion=0):
+    def old_executeMovesForConfig(self, current_phase, current_cubik, queue_set, next_queue, state_goal):
         for moveIdx in self._PHASES[current_phase]:
             next_cubik = Cubik(current_cubik.state[:], current_cubik.parents[:])
             command = self._ALL_STATE_MOVES_VARIATION[moveIdx]
@@ -101,20 +123,9 @@ class Solver():
             elif next_id not in queue_set:
                 queue_set.add(next_id)
                 next_queue.append(next_cubik)
-        # for cubik in next_queue:
-        #     results = self.executeMovesForConfig(current_phase, cubik, queue_set, [], state_goal, recursion+1)
-        #     if (results[0]):
-        #         return True, results[1]
         return False, next_queue
 
-    def test(self, parents, state):
-        cubik = Cubik()
-        for each in self._initial_commands:
-            cubik.rotateState(each[0], each[1], each[2])
-        for parent in parents:
-            cubik.rotateState(self._ALL_STATE_MOVES_VARIATION[parent][0], self._ALL_STATE_MOVES_VARIATION[parent][1], self._ALL_STATE_MOVES_VARIATION[parent][2])
-
-    def solve(self):
+    def old_solve(self):
         current_phase = 0
         goal = Cubik(list(range(20)) + 20 * [0])
         queue = [self.cubik]
@@ -124,18 +135,89 @@ class Solver():
             goToNextPhase = False
             state_goal = goal.canGoToNextPhase(current_phase)
             if queue[0].canGoToNextPhase(current_phase) == state_goal:
-                self.test(queue[0].parents, queue[0].state)
                 current_phase += 1
                 if (self.verbose):
-                    self.displayAdditionnalInformation(len(queue_set), startTime, current_phase, queue[0])
+                    self.old_displayAdditionnalInformation(len(queue_set), startTime, current_phase, queue[0])
                 startTime = time.time()
                 queue_set = set([queue[0].canGoToNextPhase(current_phase)])
             else:
                 next_queue = []
                 for current_cubik in queue:
-                    goToNextPhase, next_queue = self.executeMovesForConfig(current_phase, current_cubik, queue_set, next_queue, state_goal)
+                    goToNextPhase, next_queue = self.old_executeMovesForConfig(current_phase, current_cubik, queue_set, next_queue, state_goal)
                     if goToNextPhase:
                         break
                 queue = next_queue
-                print(len(next_queue))
         return queue[0].parent_moves_string()
+
+    def inverse(self, index):
+        return index + 2 - 2 * (index % 3)
+
+    def displayAdditionnalInformation(self, phase, moves, startTime, number_of_states):
+        print("Solved phase {} with {} moves: {}".format(phase, len(moves), self.rebuild_moves_string(moves)))
+        print("{} configuration where saved at the same time to resolve this phase".format(number_of_states))
+        print("It took {} seconds".format(time.time() - startTime))
+        print("------------------------------------------------------------------------------")
+
+    def solve(self):
+        moves = []
+        current_cubik = self.cubik
+        for phase in range(5):
+            moves += self.solve_phase(phase, current_cubik)
+            current_cubik = Cubik()
+            for move in self._initial_commands:
+                current_cubik.rotateState(move[0], move[1], move[2])
+            for move in moves:
+                command = self._ALL_STATE_MOVES_VARIATION[move]
+                current_cubik.rotateState(command[0], command[1], command[2])
+        return self.rebuild_moves_string(moves)
+
+    def rebuild_algorithm(self, move, oldDir, newId, oldId, currentId, predecessor, goalId, lastMove):
+        if oldDir > 1:
+            temp = newId
+            newId = oldId
+            oldId = temp
+            move = self.inverse(move)
+        algorithm = [move]
+        while oldId != currentId:
+            algorithm.insert(0, lastMove[oldId])
+            oldId = predecessor[oldId]
+        while newId != goalId:
+            algorithm.append(self.inverse(lastMove[newId]))
+            newId = predecessor[newId]
+        return algorithm
+
+    def solve_phase(self, current_phase, current_cubik):
+        startTime = time.time()
+        goal_cubik = Cubik()
+        queue = [current_cubik, goal_cubik]
+        predecessor = {}
+        lastMove = {}
+        direction = {}
+        currentId = current_cubik.canGoToNextPhase(current_phase)
+        goalId = goal_cubik.canGoToNextPhase(current_phase)
+        if (currentId == goalId):
+            if (self.verbose):
+                self.displayAdditionnalInformation(current_phase, [], startTime, 0)
+            return []
+        direction[currentId] = 1
+        direction[goalId] = 2
+        while True:
+            oldState = queue.pop(0)
+            oldId = oldState.canGoToNextPhase(current_phase)
+            oldDir = direction[oldId]
+            for move in self._PHASES[current_phase]:
+                command = self._ALL_STATE_MOVES_VARIATION[move]
+                newState = Cubik(oldState.state[:])
+                newState.rotateState(command[0], command[1], command[2])
+                newId = newState.canGoToNextPhase(current_phase)
+                newDir = direction[newId] if newId in direction else None
+                if (newDir and newDir != oldDir):
+                    algoritm = self.rebuild_algorithm(move, oldDir, newId, oldId, currentId, predecessor, goalId, lastMove)
+                    if (self.verbose):
+                        self.displayAdditionnalInformation(current_phase, algoritm, startTime, len(direction))
+                    return algoritm
+                if (not newDir):
+                    queue.append(newState)
+                    direction[newId] = direction[oldId]
+                    lastMove[newId] = move
+                    predecessor[newId] = oldId
