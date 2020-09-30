@@ -81,6 +81,9 @@ class Solver():
         self._initial_commands = self.parseCommands(commands)
         self.executeInitialCommands()
 
+    def moveToMoveString(self, move):
+        return self._MOVES_STRING[self._ALL_STATE_MOVES_VARIATION.index(move)]
+
     def executeInitialCommands(self):
         for command in self._initial_commands:
             self.cubik.rotateState(command[0], command[1], command[2])

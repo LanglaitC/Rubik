@@ -56,7 +56,7 @@ class Cubik():
             ),
             (
                 ((2, 0), (2, 1), (2, 2)),
-                ((0, 0), (0, 1), (0, 2)),
+                ((0, 2), (0, 1), (0, 0)),
                 ((2, 0), (2, 1), (2, 2)),
                 ((2, 0), (2, 1), (2, 2)),
             )
@@ -86,8 +86,8 @@ class Cubik():
             ),
             (
                 ((0, 0), (1, 0), (2, 0)),
-                ((0, 0), (0, 1), (0, 2)),
-                ((0, 2), (1, 2), (2, 2)),
+                ((0, 2), (0, 1), (0, 0)),
+                ((2, 2), (1, 2), (0, 2)),
                 ((2, 0), (2, 1), (2, 2)),
             )
         ),
@@ -102,8 +102,8 @@ class Cubik():
             (
                 ((0, 0), (1, 0), (2, 0)),
                 ((2, 0), (2, 1), (2, 2)),
-                ((0, 2), (1, 2), (2, 2)),
-                ((0, 0), (0, 1), (0, 2)),
+                ((2, 2), (1, 2), (0, 2)),
+                ((0, 2), (0, 1), (0, 0)),
             )
         ),
         _ROTATE_LEFT: (
@@ -131,7 +131,7 @@ class Cubik():
             ),
             (
                 ((0, 0), (0, 1), (0, 2)),
-                ((2, 0), (2, 1), (2, 2)),
+                ((2, 2), (2, 1), (2, 0)),
                 ((0, 0), (0, 1), (0, 2)),
                 ((0, 0), (0, 1), (0, 2)),
             )
@@ -212,7 +212,7 @@ class Cubik():
     def rotate(self, command: str, direction, time_to_execute):
         for _ in range(time_to_execute):
             faceToRotateIdx = self._VALID_COMMANDS[command][0]
-            self._faces[faceToRotateIdx] = np.rot90(self._faces[faceToRotateIdx], axes=direction)
+            self._faces[faceToRotateIdx] = np.rot90(self._faces[faceToRotateIdx], axes=direction, k=-1)
             neighbours = self._VALID_COMMANDS[command][1]
             facesRotation = self._VALID_COMMANDS[command][2]
             if direction == self._CLOCKWISE_AXE:
@@ -241,13 +241,3 @@ class Cubik():
         self.print_single_face([self._faces[self._LEFT_FACE_INDEX], self._faces[self._UPPER_FACE_INDEX], self._faces[self._RIGHT_FACE_INDEX]], True)
         self.print_single_face([empty_face, self._faces[self._FRONT_FACE_INDEX], empty_face])
         self.print_single_face([empty_face, self._faces[self._BOTTOM_FACE_INDEX], empty_face])
-
-
-
-        # for faceIdx in range(len(self._COLORS)):
-        #     for row in range(self._CUBE_DIMENSION):
-        #         for col in range(self._CUBE_DIMENSION):
-        #             colorIdx = self._COLORS.index(self._faces[faceIdx][row][col])
-        #             print(self._ANSI_COLORS[colorIdx] + 'O', end='\033[0m ')
-        #         print('\n', end='')
-        #     print('\n', end='')
