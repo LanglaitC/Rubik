@@ -1,6 +1,6 @@
-from src.cubik import Cubik
 import time
-from concurrent.futures import ThreadPoolExecutor
+import random
+from src.cubik import Cubik
 
 class Solver():
     _COMMAND_IS_NOT_VALID_MESSAGE = 'Invalid command : {}'
@@ -75,11 +75,17 @@ class Solver():
     _states = []
     _initial_commands = []
 
-    def __init__(self, cubik, commands, verbose=False):
+    def __init__(self, cubik, commands, verbose=False, random_commands_number=0):
         self.cubik = cubik
         self.verbose = verbose
+        if commands is None:
+            commands = self.generate_random_commands(random_commands_number)
         self._initial_commands = self.parseCommands(commands)
+        self.command_string = commands
         self.executeInitialCommands()
+
+    def generate_random_commands(self, random_commands_number):
+        return ' '.join([self._MOVES_STRING[random.randrange(0, 18)] for x in range(random_commands_number)])
 
     def moveToMoveString(self, move):
         return self._MOVES_STRING[self._ALL_STATE_MOVES_VARIATION.index(move)]
